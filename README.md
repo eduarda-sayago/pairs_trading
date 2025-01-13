@@ -24,7 +24,7 @@ After cloning the git repository, please install the required Python packages by
 pip install -r requirements.txt
 ```
 
-As there may be package config within your global packages, it is recommended to run python in a virtual environment.
+As there may be package config within your global packages, it is recommended to run python and install dependencies in a virtual environment.
 
 ```
 python -m venv venv
@@ -50,6 +50,12 @@ pip install graphviz
 
 After setting up your environment and installing the dependencies, you can run the script:
 
+1. For the clustering, run:
+```
+python pairs_clustering.py
+```
+
+2. To perform the forecasting, run:
 ```
 python rnn_trainer.py
 ```
