@@ -14,7 +14,7 @@ df_interpolated = df.interpolate(method='linear', limit = 5)
 df_cleaned = df_interpolated.dropna(axis=1)
 
 # Save the cleaned DataFrame to a new Excel file
-output_file_path = "cleaned_file_indexed.pkl"
+output_file_path = "cleaned_file_date_indexed.pkl"
 df_cleaned.to_pickle(output_file_path)
 
 print(f"Cleaned DataFrame saved to {output_file_path}")

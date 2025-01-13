@@ -610,7 +610,7 @@ class ForecastingTrader:
                 predictions_val = scaler.inverse_transform(predictions_val)
                 predictions_test = scaler.inverse_transform(predictions_test)
                 predictions_train = pd.Series(data=predictions_train.flatten(),
-                                              index=spread[model_config['n_in']:-len(y_series_val)].index)
+                                              index=spread[model_config['n_in']:-len(y_series_val) + 1].index)
                 predictions_val = pd.Series(data=predictions_val.flatten(), index=y_series_val.index)
                 predictions_test = pd.Series(data=predictions_test.flatten(),
                                              index=spread_test[-len(test_data[1]):].index)
@@ -887,7 +887,7 @@ class ForecastingTrader:
 
         return (best_model, best_score)
 
-    def run_specific_model(self, n_in, hidden_nodes, pairs, path='models/', train_val_split='5000', lag=1,
+    def run_specific_model(self, n_in, hidden_nodes, pairs, path='models/', train_val_split='01-01-2014', lag=1,
                            multistep=0, low_quantile=0.10, high_quantile=0.90):
 
         nodes_name = str(hidden_nodes[0]) + '_' + str(hidden_nodes[1]) if len(hidden_nodes) > 1 else str(hidden_nodes[0])

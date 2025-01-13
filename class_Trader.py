@@ -61,11 +61,11 @@ class Trader:
         num_units_short = num_units_short.shift(1)
 
         # initialize market position with zero
-        num_units_long[0] = 0.
-        num_units_short[0] = 0.
+        num_units_long.iloc[0] = 0.
+        num_units_short.iloc[0] = 0.
         # finally, fill in between
-        num_units_long = num_units_long.fillna(method='ffill')
-        num_units_short = num_units_short.fillna(method='ffill')
+        num_units_long = num_units_long.ffill()
+        num_units_short = num_units_short.ffill()
         num_units = num_units_long + num_units_short
         num_units = pd.Series(data=num_units.values, index=y.index, name='numUnits')
 
@@ -98,7 +98,7 @@ class Trader:
 
         # calculate sharpe ratio for each pair separately
         ret_w_costs = summary.returns
-        n_years = round(len(y) / (240 * 78))
+        n_years = round(len(y) / (240))
         n_days = 252
         if np.std(ret_w_costs) == 0:
             sharpe_no_costs, sharpe_w_costs = (0, 0)
@@ -134,8 +134,8 @@ class Trader:
             pair_info = pair[2]
 
             if test_mode:
-                y = pair_info['Y_test']
-                x = pair_info['X_test']
+                y = pair_info.iloc['Y_test']
+                x = pair_info.iloc['X_test']
             else:
                 y = pair_info['Y_train'][train_val_split:]
                 x = pair_info['X_train'][train_val_split:]
@@ -149,7 +149,7 @@ class Trader:
                 sharpe_results.append(sharpe[0])
                 # with costs
                 # cum_returns_with_costs.append((np.cumprod(1 + summary.position_ret_with_costs) - 1).iloc[-1] * 100)
-                cum_returns_with_costs.append((summary.account_balance[-1] - 1) * 100)
+                cum_returns_with_costs.append((summary.account_balance.iloc[-1] - 1) * 100)
                 sharpe_results_with_costs.append(sharpe[1])
                 performance.append((pair, summary, balance_summary))
 
@@ -243,23 +243,23 @@ class Trader:
     def apply_costs(self, row, fixed_costs_per_trade, short_costs_per_day, beta=0):
 
         if beta == 0:
-            beta = row['beta_position']
+            beta = row.loc['beta_position']
 
-        if row['position_during_day'] == 1. and row['trading_duration'] != 0:
+        if row.loc['position_during_day'] == 1. and row.loc['trading_duration'] != 0:
             if beta >= 1:
                 return fixed_costs_per_trade * (1 / beta) + fixed_costs_per_trade + short_costs_per_day * \
-                       row['trading_duration']
+                       row.loc['trading_duration']
             elif beta < 1:
                 return fixed_costs_per_trade * beta + fixed_costs_per_trade + short_costs_per_day * \
-                       row['trading_duration'] * beta
+                       row.loc['trading_duration'] * beta
 
-        elif row['position_during_day'] == -1. and row['trading_duration'] != 0:
+        elif row.loc['position_during_day'] == -1. and row.loc['trading_duration'] != 0:
             if beta >= 1:
                 return fixed_costs_per_trade * (1 / beta) + fixed_costs_per_trade + short_costs_per_day * \
-                       row['trading_duration'] * (1 / beta)
+                       row.loc['trading_duration'] * (1 / beta)
             elif beta < 1:
                 return fixed_costs_per_trade * beta + fixed_costs_per_trade + short_costs_per_day * \
-                       row['trading_duration']
+                       row.loc['trading_duration']
         else:
             return 0
 
@@ -306,7 +306,7 @@ class Trader:
                 else:
                     leg_y[0] = 1
                     leg_x[0] = beta
-            elif positions[i] == 0:
+            elif positions.iloc[i] == 0:
                 pnl_y[i] = 0
                 pnl_x[i] = 0
                 leg_y[i] = leg_y[i - 1]
@@ -314,7 +314,7 @@ class Trader:
                 account_balance[i] = account_balance[i-1]
             else:
                 # add costs
-                if position_trigger[i] == 1:
+                if position_trigger.iloc[i] == 1:
                     # every new position invest initial 1$ + acc in X + acc in Y
                     position_investment = account_balance[i-1]
                     # if new position, that most legs contain now the overall invested
@@ -327,14 +327,14 @@ class Trader:
 
                     # update legs
                     if beta > 1:
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             leg_y[i] = position_investment * (1 / beta) + pnl_y[i]
                             leg_x[i] = position_investment - pnl_x[i]
                         else:
                             leg_y[i] = position_investment * (1 / beta) - pnl_y[i]
                             leg_x[i] = position_investment + pnl_x[i]
                     else:
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             leg_y[i] = position_investment + pnl_y[i]
                             leg_x[i] = position_investment * beta - pnl_x[i]
                         else:
@@ -345,41 +345,41 @@ class Trader:
                     if beta >= 1:
                         pnl_y[i] = pnl_y[i] - 0.0028*(1/beta)*position_investment # add commission + bid ask spread
                         pnl_x[i] = pnl_x[i] - 0.0028*position_investment # add commission + bid ask spread
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             pnl_x[i] = pnl_x[i] - 1 * (0.01 / 252)*position_investment
-                        elif positions[i] == -1:
+                        elif positions.iloc[i] == -1:
                             pnl_y[i] = pnl_y[i] - 1 * (0.01 / 252)*(1/beta)*position_investment
                     elif beta < 1:
                         pnl_y[i] = pnl_y[i] - 0.0028 * position_investment  # add commission + bid ask spread
                         pnl_x[i] = pnl_x[i] - 0.0028 * beta * position_investment  # add commission + bid ask spread
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             pnl_x[i] = pnl_x[i] - 1 * (0.01 / 252)*beta*position_investment
-                        elif positions[i] == -1:
+                        elif positions.iloc[i] == -1:
                             pnl_y[i] = pnl_y[i] - 1 * (0.01 / 252)*position_investment
                     # update balance
                     account_balance[i] = account_balance[i-1] + pnl_x[i] + pnl_y[i]
 
-                elif position_trigger[i] == 2:
+                elif position_trigger.iloc[i] == 2:
                     # every new position invest initial 1$ + acc in X + acc in Y
                     position_investment = account_balance[i-1]
                     # if new position, that most legs contain now the overall invested
                     if beta > 1:
-                        pnl_y[i] = y_returns[i] * position_investment * (1 / beta)
-                        pnl_x[i] = x_returns[i] * position_investment
+                        pnl_y[i] = y_returns.iloc[i] * position_investment * (1 / beta)
+                        pnl_x[i] = x_returns.iloc[i] * position_investment
                     else:
-                        pnl_y[i] = y_returns[i] * position_investment
-                        pnl_x[i] = x_returns[i] * position_investment * beta
+                        pnl_y[i] = y_returns.iloc[i] * position_investment
+                        pnl_x[i] = x_returns.iloc[i] * position_investment * beta
 
                     # update legs
                     if beta > 1:
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             leg_y[i] = position_investment * (1 / beta) + pnl_y[i]
                             leg_x[i] = position_investment - pnl_x[i]
                         else:
                             leg_y[i] = position_investment * (1 / beta) - pnl_y[i]
                             leg_x[i] = position_investment + pnl_x[i]
                     else:
-                        if positions[i] == 1:
+                        if positions.iloc[i] == 1:
                             leg_y[i] = position_investment + pnl_y[i]
                             leg_x[i] = position_investment * beta - pnl_x[i]
                         else:
@@ -398,11 +398,11 @@ class Trader:
 
                 else:
                     # calculate trade pnl
-                    pnl_y[i] = y_returns[i] * leg_y[i - 1]
-                    pnl_x[i] = x_returns[i] * leg_x[i - 1]
+                    pnl_y[i] = y_returns.iloc[i] * leg_y[i - 1]
+                    pnl_x[i] = x_returns.iloc[i] * leg_x[i - 1]
 
                     # update legs
-                    if positions[i] == 1:
+                    if positions.iloc[i] == 1:
                         leg_y[i] = leg_y[i - 1] + pnl_y[i]
                         leg_x[i] = leg_x[i - 1] - pnl_x[i]
                     else:
@@ -410,17 +410,17 @@ class Trader:
                         leg_x[i] = leg_x[i - 1] + pnl_x[i]
 
                     # add short costs
-                    if position_trigger[i] == -1:
-                        if positions[i]==1:
+                    if position_trigger.iloc[i] == -1:
+                        if positions.iloc[i]==1:
                             if beta > 1:
-                                pnl_x[i] = pnl_x[i] - trading_durations[i] * (0.01 / 252) * position_investment
+                                pnl_x[i] = pnl_x[i] - trading_durations.iloc[i] * (0.01 / 252) * position_investment
                             elif beta < 1:
-                                pnl_x[i] = pnl_x[i] - trading_durations[i] * (0.01 / 252)*beta*position_investment
-                        elif positions[i]==-1:
+                                pnl_x[i] = pnl_x[i] - trading_durations.iloc[i] * (0.01 / 252)*beta*position_investment
+                        elif positions.iloc[i]==-1:
                             if beta > 1:
-                                pnl_y[i] = pnl_y[i] - trading_durations[i] * (0.01 / 252)*(1/beta)*position_investment
+                                pnl_y[i] = pnl_y[i] - trading_durations.iloc[i] * (0.01 / 252)*(1/beta)*position_investment
                             elif beta < 1:
-                                pnl_y[i] = pnl_y[i] - trading_durations[i] * (0.01 / 252) * position_investment
+                                pnl_y[i] = pnl_y[i] - trading_durations.iloc[i] * (0.01 / 252) * position_investment
 
                     # update balance
                     account_balance[i] = account_balance[i - 1] + pnl_x[i] + pnl_y[i]
@@ -456,7 +456,7 @@ class Trader:
         # remove added days from resample
         daily_ret = daily_ret.loc[daily_index]
 
-        annualized_ret = (np.cumprod(1 + ret) - 1)[-1]
+        annualized_ret = (np.cumprod(1 + ret) - 1).iloc[-1]
         year = ret.index[0].year
         if year in rf.keys():
             sharpe_ratio = (annualized_ret-rf[year]) / (np.std(daily_ret)*np.sqrt(time_in_market))
@@ -482,9 +482,13 @@ class Trader:
             portfolio_returns = pd.concat([portfolio_returns, pair_balance.pct_change().fillna(0)], axis=1)
 
         # add first day with initial balance
-        total_account_balance = pd.Series(data=[len(pairs)],
-                                          index=[total_account_balance.index[0] - timedelta(days=1)]).append(
-                                          total_account_balance)
+        total_account_balance = pd.concat([
+            pd.Series(
+                data=[len(pairs)], 
+                index=[total_account_balance.index[0] - timedelta(days=1)]
+            ),
+            total_account_balance
+        ])
 
         # calculate portfolio volatility
         weights = np.array([1 / len(pairs)] * len(pairs))
@@ -492,7 +496,7 @@ class Trader:
 
         # calculate sharpe ratio
         rf = {2014: 0.00033, 2015: 0.00053, 2016: 0.0032, 2017: 0.0093, 2018: 0.0194}
-        annualized_ret = (total_account_balance[-1]-len(pairs))/len(pairs)
+        annualized_ret = (total_account_balance.iloc[-1]-len(pairs))/len(pairs)
         year = total_account_balance.index[-1].year
         if year in rf.keys():
             # assuming iid return's distributio, sr may be calculated as:
@@ -537,16 +541,18 @@ class Trader:
             plt.plot(xs, label='Total Account Balance')
             dates = account_balance.resample('BMS').first().dropna().index.date
             xi = np.arange(0, len(account_balance), len(account_balance)/12)
-            plt.xticks(xi, dates, rotation=50)
+            dates_reduced = dates[::len(dates)//len(xi)]
+            plt.xticks(xi, dates_reduced, rotation=50)
             plt.xlim(0, len(account_balance))
             plt.plot([i, j], [xs[i], xs[j]], 'o', color='Red', markersize=10)
             plt.xlabel('Date', size=12)
             plt.ylabel('Capital($)', size=12)
             plt.legend()
+            plt.show()
 
-        max_dd_period = round((i - j) / 78)
+        max_dd_period = round((i - j))
         print('Max DD period: {} days'.format(max_dd_period))
-        #print('Max DD period: {} days'.format((account_balance.index[i]-account_balance.index[j]).days))
+        #print('Max DD period: {} days'.format((account_balance.index.iloc[i]-account_balance.index.iloc[j]).days))
 
         return (xs[i]-xs[j])/xs[j] * 100, max_dd_period, total_dd_duration
 
@@ -573,16 +579,16 @@ class Trader:
         end_position = pd.Series(data=[0] * len(y), index=y.index, name='end_position')
         end_position[new_positions] = 1.
         # add end position if trading period is over and position is open
-        if positions[-1] != 0:
-            end_position[-1] = 1.
+        if positions.iloc[-1] != 0:
+            end_position.iloc[-1] = 1.
 
         # get corresponding X and Y
         y_entry = pd.Series(data=[np.nan] * len(y), index=y.index, name='y_entry')
         x_entry = pd.Series(data=[np.nan] * len(y), index=y.index, name='x_entry')
         y_entry[new_positions] = y[new_positions]
         x_entry[new_positions] = x[new_positions]
-        y_entry = y_entry.shift().fillna(method='ffill')
-        x_entry = x_entry.shift().fillna(method='ffill')
+        y_entry = y_entry.shift().ffill()
+        x_entry = x_entry.shift().ffill()
 
         # name positions series
         positions.name = 'positions'
@@ -620,7 +626,7 @@ class Trader:
         :return: percentage of pairs with positive returns
         """
         # use below for fully invested capital:
-        # cum_returns_filtered = [cum for cum in cum_returns if cum != 0]
+        # cum_returns_filtered = .iloc[cum for cum in cum_returns if cum != 0]
         # or use below for commited capital:
         cum_returns_filtered = cum_returns
 
@@ -701,7 +707,7 @@ class Trader:
         total_account_balance = performance[0][1]['account_balance']
         for index in range(1, len(total_pairs)):
             total_account_balance = total_account_balance + performance[index][1]['account_balance']
-        total_account_balance = total_account_balance.fillna(method='ffill')
+        total_account_balance = total_account_balance.ffill()
         max_dd, max_dd_duration, total_dd_duration = self.calculate_maximum_drawdown(total_account_balance)
         print('Maximum drawdown of portfolio: {:.2f}%'.format(max_dd))
 

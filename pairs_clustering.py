@@ -162,15 +162,23 @@ data_processor = class_DataProcessor.DataProcessor()
 # intraday
 #df_prices = pd.read_pickle('data/etfs/pickle/commodity_ETFs_intraday_interpolated_screened_no_outliers.pickle')
 #df_prices = pd.read_pickle('data/etfs/pickle/commodity_ETFs_interpolated_screened.pickle')
-df_prices = pd.read_pickle('cleaned_file.pkl')
+df_prices = pd.read_pickle('prices_date_indexed.pkl')
 subsample = 2500
 min_half_life = 1 # number of points in a day
 max_half_life = 252 #~number of points in a year: 78*252
 file_extension = 'intraday'
 
-split_index = int(len(df_prices) * 0.8)  # 80% train, 20% test
-df_prices_train = df_prices.iloc[:split_index]
-df_prices_test = df_prices.iloc[split_index:]
+df_prices_train, df_prices_test = data_processor.split_data(df_prices,
+                                                            ('16-05-1996',
+                                                             '31-12-2015'),
+                                                            ('01-01-2016',
+                                                             '31-12-2020'),
+                                                            remove_nan=True)
+train_val_split = '01-01-2014'
+
+#split_index = int(len(df_prices) * 0.8)  # 80% train, 20% test
+#df_prices_train = df_prices.iloc[:split_index]
+#df_prices_test = df_prices.iloc[split_index:]
 
 clustering_unsupervised_learning(df_prices_train, 0.15, 3)
 
