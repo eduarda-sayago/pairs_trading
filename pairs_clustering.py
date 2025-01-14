@@ -140,7 +140,7 @@ def plot_TSNE(X, clf, clustered_series_all):
     ax.set_yticks(range(-200, 201, 400))
 
     # Save and show plot
-    plt.savefig('OPTICS_2013_2017_no_grey.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('PCA_OPTICS_clustering_result_1990_2015.png', bbox_inches='tight', pad_inches=0.1)
     plt.show()
 
 
