@@ -65,7 +65,7 @@ def clustering_unsupervised_learning(df_prices_train, eps, min_samples):
         series.plot(figsize=(10,5))#title='ETFs Time Series for Cluster %d' % (clust+1))
         #plt.ylabel('Normalized log prices', size=12)
         #plt.xlabel('Date', size=12)
-        plt.savefig('./images/cluster_{}.png'.format(str(clust+1)), bbox_inches='tight', pad_inches=0.1)
+        plt.savefig('./cluster_charts/cluster_{}.png'.format(str(clust+1)), bbox_inches='tight', pad_inches=0.1)
     
     print("Evaluating pairs:")
     pairs_unsupervised, unique_tickers = series_analyser.get_candidate_pairs(clustered_series=clustered_series,
@@ -97,8 +97,8 @@ def plot_TSNE(X, clf, clustered_series_all):
 
     # Filter points to be within the range [-300, 300]
     valid_indices = np.logical_and.reduce([
-        X_tsne[:, 0] >= -300, X_tsne[:, 0] <= 300,
-        X_tsne[:, 1] >= -300, X_tsne[:, 1] <= 300
+        X_tsne[:, 0] >= -200, X_tsne[:, 0] <= 200,
+        X_tsne[:, 1] >= -200, X_tsne[:, 1] <= 200
     ])
     X_tsne = X_tsne[valid_indices]
     labels = clf.labels_[valid_indices]
@@ -129,15 +129,15 @@ def plot_TSNE(X, clf, clustered_series_all):
     x = X_tsne[:, 0]
     y = X_tsne[:, 1]
     tickers = list(clustered_series_all.index)
-    plt.scatter(x, y, s=200, alpha=0.75, c=labels, cmap=cm.Paired)
+    plt.scatter(x, y, s=150, alpha=0.75, c=labels, cmap=cm.Paired)
     for i, ticker in enumerate(tickers):
         plt.annotate(ticker, (x[i] - 20, y[i] + 12), size=15)
 
     # Axis and labels
     plt.xlabel('t-SNE Dim. 1', position=(0.92, 0), size=20)
     plt.ylabel('t-SNE Dim. 2', position=(0, 0.92), size=20)
-    ax.set_xticks(range(-200, 201, 400))
-    ax.set_yticks(range(-200, 201, 400))
+    ax.set_xticks(range(-150, 151, 300))
+    ax.set_yticks(range(-150, 151, 300))
 
     # Save and show plot
     plt.savefig('PCA_OPTICS_clustering_result_1990_2015.png', bbox_inches='tight', pad_inches=0.1)
@@ -150,9 +150,9 @@ def cluster_size(counts):
     plt.barh(counts.index+1, counts.values)
     #plt.title('Cluster Member Counts')
     plt.yticks(np.arange(1, len(counts)+1, 1))
-    plt.xlabel('ETFs within cluster', size=12)
+    plt.xlabel('Stocks within cluster', size=12)
     plt.ylabel('Cluster Id', size=12);
-    plt.savefig('./images/0_ETF_cluster_size.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('stocks_per_cluster.png', bbox_inches='tight', pad_inches=0.1)
     
 
 series_analyser = class_SeriesAnalyser.SeriesAnalyser()
@@ -170,17 +170,17 @@ file_extension = 'intraday'
 
 df_prices_train, df_prices_test = data_processor.split_data(df_prices,
                                                             ('16-05-1996',
-                                                             '31-12-2015'),
-                                                            ('01-01-2016',
+                                                             '31-12-2016'),
+                                                            ('01-01-2017',
                                                              '31-12-2020'),
                                                             remove_nan=True)
-train_val_split = '01-01-2014'
+train_val_split = '01-01-2015'
 
 #split_index = int(len(df_prices) * 0.8)  # 80% train, 20% test
 #df_prices_train = df_prices.iloc[:split_index]
 #df_prices_test = df_prices.iloc[split_index:]
 
-clustering_unsupervised_learning(df_prices_train, 0.15, 3)
+clustering_unsupervised_learning(df_prices_train, 0.14, 3)
 
 
 
