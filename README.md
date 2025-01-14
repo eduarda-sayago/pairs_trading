@@ -1,41 +1,49 @@
-# UFRGS Pairs_Trading
+# UFRGS Pairs_Trading_ML_e_PCA
 
-All the code in this project is based on https://github.com/simaomsarmento/PairsTrading/ (13.01.2025) by Simão Nava de Moraes Sarmento.
+Todo o código deste projeto é baseado em https://github.com/simaomsarmento/PairsTrading/ (13.01.2025) por Simão Nava de Moraes Sarmento.
 
-This project requires Python 3.8 (or later) and various Python packages to be installed. Please follow the instructions below to set up the environment and run the script.
+O projeto requer Python 3.8 (or posterior) e instalação de diversos pacotes do Python. Por favor siga as instruções abaixo para organizar o ambiente e rodar o script.
 
-## Prerequisites
+## Pré-requisitos
 
-Make sure you have the following installed:
+É necessário ter os seguintes programas instalados:
 
-- Python 3.8 (x64) or later.
-- `pip` (Python's package installer).
+- Python 3.8 (x64) ou posterior.
+- `pip` (instalador de pacotes do Python).
 
-### 1. Install Python 3.8 (or later)
-If you don't have Python 3.8 or later, download it from the official [Python website](https://www.python.org/downloads/).
+### 1. Instalar versão Python 3.8 (ou posterior)
+Se não houver instalado, instale em [Python website](https://www.python.org/downloads/).
 
-- During installation, ensure the box "Add Python to PATH" is checked.
+- Durante a instalação, tenha certeza que a caixa "Adicione o Python ao PATH" está selecionada.
 
-### 2. Install Required Packages
+### 2. Instale os pacotes necessários
 
-As there may be package config within your global packages, it is recommended to run python and install dependencies in a virtual environment.
+Como pode haver configurações de pacotes entre seu ambiente global, é recomendado que se rode o python e instale as dependências em um ambiente virtual (venv).
+
+Se estiver no VS Code, aperte Ctrl Shift P e selecione View: Toggle Terminal. Então digite:
 
 ```
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
+O trecho instalará os pacotes necessários dentro do ambiente virtual.
 
-### 3. Run the Script
+### 3. Rode o Script
 
-After setting up your environment and installing the dependencies, you can run the script:
+Depois de configurar o ambiente e instalar o que é necessário, você pode rodar o script:
 
-1. For the clustering, run:
+1. Para o processo de clustering, rode:
 ```
 python pairs_clustering.py
 ```
 
-2. To perform the forecasting, run:
+2. Para performar o trade, rode:
+```
+python pairs_trading.py
+```
+
+3. Para realizar a previsão, rode:
 ```
 python rnn_trainer.py
 ```
